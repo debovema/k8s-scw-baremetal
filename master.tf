@@ -15,8 +15,14 @@ resource "scaleway_server" "k8s_master" {
   //    type       = "l_ssd"
   //  }
 
+}
+
+resource "null_resource" "k8s_master_init" {
+  count = 1
+
   connection {
     type        = "ssh"
+    host        = "${element(scaleway_server.k8s_master.*.public_ip, count.index)}"
     user        = "root"
     private_key = "${file(var.private_key)}"
   }
@@ -33,7 +39,7 @@ resource "scaleway_server" "k8s_master" {
       "set -e",
       "chmod +x /tmp/docker-install.sh && /tmp/docker-install.sh ${var.docker_version}",
       "chmod +x /tmp/kubeadm-install.sh && /tmp/kubeadm-install.sh ${var.k8s_version}",
-      "kubeadm init --apiserver-advertise-address=${self.private_ip} --apiserver-cert-extra-sans=${self.public_ip} --kubernetes-version=${var.k8s_version} --ignore-preflight-errors=KubeletVersion",
+      "kubeadm init --apiserver-advertise-address=${element(scaleway_server.k8s_master.*.private_ip, count.index)} --apiserver-cert-extra-sans=${element(scaleway_server.k8s_master.*.public_ip, count.index)} --kubernetes-version=${var.k8s_version} --ignore-preflight-errors=KubeletVersion",
       "mkdir -p $HOME/.kube && cp -i /etc/kubernetes/admin.conf $HOME/.kube/config",
       "kubectl create secret -n kube-system generic weave-passwd --from-literal=weave-passwd=${var.weave_passwd}",
       "kubectl apply -f \"https://cloud.weave.works/k8s/net?password-secret=weave-passwd&k8s-version=$(kubectl version | base64 | tr -d '\n')\"",
@@ -41,7 +47,7 @@ resource "scaleway_server" "k8s_master" {
     ]
   }
   provisioner "local-exec" {
-    command    = "./scripts/kubectl-conf.sh ${terraform.workspace} ${self.public_ip} ${self.private_ip} ${var.private_key}"
+    command    = "./scripts/kubectl-conf.sh ${terraform.workspace} ${element(scaleway_server.k8s_master.*.public_ip, count.index)} ${element(scaleway_server.k8s_master.*.private_ip, count.index)} ${var.private_key}"
     on_failure = "continue"
   }
 }
@@ -54,5 +60,5 @@ data "external" "kubeadm_join" {
     key = "${var.private_key}"
   }
 
-  depends_on = ["scaleway_server.k8s_master"]
+  depends_on = ["null_resource.k8s_master_init"]
 }

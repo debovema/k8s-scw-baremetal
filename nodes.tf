@@ -15,8 +15,14 @@ resource "scaleway_server" "k8s_node" {
   //    type       = "l_ssd"
   //  }
 
+}
+
+resource "null_resource" "k8s_node_init" {
+  count          = "${var.nodes}"
+
   connection {
     type        = "ssh"
+    host        = "${element(scaleway_server.k8s_node.*.public_ip, count.index)}"
     user        = "root"
     private_key = "${file(var.private_key)}"
   }
@@ -49,4 +55,5 @@ resource "scaleway_server" "k8s_node" {
       host = "${scaleway_ip.k8s_master_ip.0.ip}"
     }
   }
+
 }
