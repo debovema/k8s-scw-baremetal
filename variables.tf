@@ -46,3 +46,25 @@ variable "private_key" {
   default     = "~/.ssh/id_rsa"
   description = "The path to your private key"
 }
+
+variable "lb_enabled" {
+  type        = "string"
+  default     = "false"
+  description = "Whether to enable load balancing feature or not"
+}
+
+variable "lb_name" {
+  type        = "string"
+  default     = "scaleway-lb"
+  description = "Name of the Scaleway Load Balancer"
+}
+
+variable "traefik_version" {
+  type        = "string"
+  default     = "v1.7.6"
+  description = "The Docker image version for Traefik load balancer"
+}
+
+variable "domain_name" {
+  type        = "string"
+}

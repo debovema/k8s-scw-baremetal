@@ -1,3 +1,4 @@
+/*
 # Master
 resource "scaleway_security_group" "master_security_group" {
   name        = "sg.master.${terraform.workspace}"
@@ -33,6 +34,16 @@ resource "scaleway_security_group_rule" "https_master_dashboard_accept" {
   ip_range  = "${element(var.ip_admin, count.index)}"
   protocol  = "TCP"
   port      = 8888
+}
+
+resource "scaleway_security_group_rule" "https_accept" {
+  security_group = "${scaleway_security_group.master_security_group.id}"
+
+  action    = "accept"
+  direction = "inbound"
+  ip_range  = "${element(var.ip_admin, count.index)}"
+  protocol  = "TCP"
+  port      = 443
 }
 
 resource "scaleway_security_group_rule" "https_master_management_accept" {
@@ -88,3 +99,4 @@ resource "scaleway_security_group_rule" "icmp_node_drop" {
   ip_range  = "0.0.0.0/0"
   protocol  = "ICMP"
 }
+*/

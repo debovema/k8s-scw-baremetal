@@ -1,0 +1,10 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: ${kubernetes_version}
+apiServer:
+  extraArgs:
+    advertise-address: ${advertise_address}
+  certSANs:
+  - "${public_ip}"
+  - "apiserver.${domain_name}"
+controlPlaneEndpoint: "apiserver.${domain_name}:${api_server_port}"

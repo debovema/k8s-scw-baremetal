@@ -8,17 +8,32 @@ resource "scaleway_server" "k8s_master" {
   image          = "${data.scaleway_image.xenial.id}"
   type           = "${var.server_type}"
   public_ip      = "${element(scaleway_ip.k8s_master_ip.*.ip, count.index)}"
-  security_group = "${scaleway_security_group.master_security_group.id}"
+  #security_group = "${scaleway_security_group.master_security_group.id}"
 
   //  volume {
   //    size_in_gb = 50
   //    type       = "l_ssd"
   //  }
+}
 
+data "template_file" "kubeadm_config" {
+  count = 1
+
+  template = "${file("${path.module}/templates/kubeadm-config.yaml")}"
+
+  vars {
+    domain_name        = "${var.domain_name}"
+    api_server_port    = "6443"
+    kubernetes_version = "${var.k8s_version}"
+    advertise_address  = "${element(scaleway_server.k8s_master.*.private_ip, count.index)}"
+    public_ip          = "${element(scaleway_server.k8s_master.*.public_ip, count.index)}"
+  }
 }
 
 resource "null_resource" "k8s_master_init" {
   count = 1
+
+  depends_on = ["data.external.scaleway_lb"]
 
   connection {
     type        = "ssh"
@@ -34,13 +49,20 @@ resource "null_resource" "k8s_master_init" {
     source      = "addons/"
     destination = "/tmp"
   }
+  provisioner "file" {
+    content     = "${element(data.template_file.kubeadm_config.*.rendered, count.index)}"
+    destination = "/tmp/kubeadm-config.yaml"
+  }
+  
   provisioner "remote-exec" {
     inline = [
       "set -e",
       "chmod +x /tmp/docker-install.sh && /tmp/docker-install.sh ${var.docker_version}",
       "chmod +x /tmp/kubeadm-install.sh && /tmp/kubeadm-install.sh ${var.k8s_version}",
-      "kubeadm init --apiserver-advertise-address=${element(scaleway_server.k8s_master.*.private_ip, count.index)} --apiserver-cert-extra-sans=${element(scaleway_server.k8s_master.*.public_ip, count.index)} --kubernetes-version=${var.k8s_version} --ignore-preflight-errors=KubeletVersion",
-      "mkdir -p $HOME/.kube && cp -i /etc/kubernetes/admin.conf $HOME/.kube/config",
+      "kubeadm reset -f",
+      // "kubeadm init --apiserver-advertise-address=${element(scaleway_server.k8s_master.*.private_ip, count.index)} --apiserver-cert-extra-sans=${element(scaleway_server.k8s_master.*.public_ip, count.index)},kube-apiserver.${var.domain_name} --kubernetes-version=${var.k8s_version} --ignore-preflight-errors=KubeletVersion",
+      "kubeadm init --config=/tmp/kubeadm-config.yaml",
+      "mkdir -p $HOME/.kube && cp /etc/kubernetes/admin.conf $HOME/.kube/config",
       "kubectl create secret -n kube-system generic weave-passwd --from-literal=weave-passwd=${var.weave_passwd}",
       "kubectl apply -f \"https://cloud.weave.works/k8s/net?password-secret=weave-passwd&k8s-version=$(kubectl version | base64 | tr -d '\n')\"",
       "chmod +x /tmp/monitoring-install.sh && /tmp/monitoring-install.sh ${var.arch}",

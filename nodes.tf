@@ -8,13 +8,14 @@ resource "scaleway_server" "k8s_node" {
   image          = "${data.scaleway_image.xenial.id}"
   type           = "${var.server_type_node}"
   public_ip      = "${element(scaleway_ip.k8s_node_ip.*.ip, count.index)}"
-  security_group = "${scaleway_security_group.node_security_group.id}"
+  #security_group = "${scaleway_security_group.node_security_group.id}"
 
   //  volume {
   //    size_in_gb = 50
   //    type       = "l_ssd"
   //  }
 
+  depends_on = ["data.external.scaleway_lb"]
 }
 
 resource "null_resource" "k8s_node_init" {
@@ -39,6 +40,7 @@ resource "null_resource" "k8s_node_init" {
       "set -e",
       "chmod +x /tmp/docker-install.sh && /tmp/docker-install.sh ${var.docker_version}",
       "chmod +x /tmp/kubeadm-install.sh && /tmp/kubeadm-install.sh ${var.k8s_version}",
+      "kubeadm reset -f",
       "${data.external.kubeadm_join.result.command}",
     ]
   }
