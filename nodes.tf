@@ -38,11 +38,13 @@ resource "null_resource" "k8s_node_init" {
   provisioner "remote-exec" {
     inline = [
       "set -e",
-      "echo \"${local.lb_ip}  apiserver.${var.domain_name}\" >> /etc/hosts",
+      #"echo \"${local.lb_ip}  apiserver.${var.domain_name}\" >> /etc/hosts",
+      "echo \"${element(scaleway_server.k8s_master.*.public_ip, 0)} apiserver.${var.domain_name}\" >> /etc/hosts",
       "chmod +x /tmp/docker-install.sh && /tmp/docker-install.sh ${var.docker_version}",
       "chmod +x /tmp/kubeadm-install.sh && /tmp/kubeadm-install.sh ${var.k8s_version}",
       "kubeadm reset -f",
       "${data.external.kubeadm_join.result.command}",
+      "sed -i '/.*${var.domain_name}/d' /etc/hosts",
     ]
   }
   provisioner "remote-exec" {

@@ -71,8 +71,8 @@ fi
 echo "KUBE_API_SERVER_BACKEND_ID=$KUBE_API_SERVER_BACKEND_ID"
 
 # create Kubernetes API server frontend 
-curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$KUBE_API_SERVER_BACKEND_ID\",\"inbound_port\":$KUBE_API_SERVER_PORT,\"inbound_protocol\":\"tcp\",\"name\":\"Kubernetes API server frontend\",\"timeout_client\":5000}"
+curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$KUBE_API_SERVER_BACKEND_ID\",\"inbound_port\":$KUBE_API_SERVER_PORT,\"inbound_protocol\":\"tcp\",\"name\":\"Kubernetes API server frontend\",\"timeout_client\":5000}" > /dev/null
 # create HTTP frontend 
-curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$HTTP_BACKEND_ID\",\"inbound_port\":80,\"inbound_protocol\":\"tcp\",\"name\":\"HTTP frontend\",\"timeout_client\":5000}"
+curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$HTTP_BACKEND_ID\",\"inbound_port\":80,\"inbound_protocol\":\"tcp\",\"name\":\"HTTP frontend\",\"timeout_client\":5000}" > /dev/null
 # create HTTPS frontend 
-curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$HTTPS_BACKEND_ID\",\"inbound_port\":443,\"inbound_protocol\":\"tcp\",\"name\":\"HTTPS frontend\",\"timeout_client\":5000}"
+curl_scw -X POST "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$LB_ID/frontends" -d "{\"backend_id\":\"$HTTPS_BACKEND_ID\",\"inbound_port\":443,\"inbound_protocol\":\"tcp\",\"name\":\"HTTPS frontend\",\"timeout_client\":5000}" > /dev/null

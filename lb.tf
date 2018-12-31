@@ -59,7 +59,8 @@ resource "null_resource" "traefik_init" {
   provisioner "remote-exec" {
     inline = [
       "set -e",
-      "kubectl apply -f /tmp/traefik.yaml"
+      "kubectl apply -f /tmp/traefik.yaml",
+      "sed -i '/.*${var.domain_name}/d' /etc/hosts",
     ]
   }
 }
