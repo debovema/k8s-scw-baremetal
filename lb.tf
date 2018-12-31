@@ -1,8 +1,8 @@
 locals {
   nodes_ips = "${concat(scaleway_server.k8s_master.*.public_ip, scaleway_server.k8s_node.*.public_ip)}"
   masters_private_ips = "${scaleway_server.k8s_master.*.private_ip}"
+  lb_ip = "${data.external.scaleway_lb.result["scaleway_lb_ip"]}"
 }
-
 resource "null_resource" "scaleway_lb" {
   provisioner "local-exec" {
     command    = "${path.module}/scripts/scaleway-lb.sh"
@@ -14,8 +14,6 @@ resource "null_resource" "scaleway_lb" {
       KUBE_API_SERVER_PORT         = 6443
       MASTER_NODES_IPS             = "\"${join("\",\"", local.masters_private_ips)}\""
     }
-
-    on_failure = "continue"
   }
 }
 

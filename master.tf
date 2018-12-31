@@ -57,6 +57,7 @@ resource "null_resource" "k8s_master_init" {
   provisioner "remote-exec" {
     inline = [
       "set -e",
+      "echo \"${local.lb_ip}  apiserver.${var.domain_name}\" >> /etc/hosts",
       "chmod +x /tmp/docker-install.sh && /tmp/docker-install.sh ${var.docker_version}",
       "chmod +x /tmp/kubeadm-install.sh && /tmp/kubeadm-install.sh ${var.k8s_version}",
       "kubeadm reset -f",
