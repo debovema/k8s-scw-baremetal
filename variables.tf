@@ -31,7 +31,11 @@ variable "server_type_node" {
   description = "Use C1 for arm, ARM64-2GB for arm64 and C2S for x86_64"
 }
 
-variable "nodes" {
+variable "masters_count" {
+  default = 1
+}
+
+variable "nodes_count" {
   default = 2
 }
 

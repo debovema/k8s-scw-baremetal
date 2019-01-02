@@ -1,5 +1,9 @@
-output "k8s_master_public_ip" {
+output "master_public_ip" {
   value = "${scaleway_ip.k8s_master_ip.0.ip}"
+}
+
+output "masters_public_ip" {
+  value = "${concat(scaleway_server.k8s_additional_master.*.name, scaleway_server.k8s_additional_master.*.public_ip)}"
 }
 
 output "kubeadm_join_command" {

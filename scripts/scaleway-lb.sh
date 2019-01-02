@@ -5,7 +5,7 @@ alias curl_scw='curl -s -H "accept: application/json" -H "X-Auth-Token: $SCALEWA
 curl_scw -X GET https://api-world.scaleway.com/lbaas/v1beta1/lbs | jq -r -e ".lbs[] | select(.name ==  \"$SCALEWAY_LB_NAME\") | .id" > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then # found at least one LB with this name, delete them
-  if [ "$DELETE_EXISTING" == "true" ]; then
+  if [ "$DELETE_EXISTING" -ne "true" ]; then
     curl_scw -X GET https://api-world.scaleway.com/lbaas/v1beta1/lbs | jq -r -e ".lbs[] | select(.name ==  \"$SCALEWAY_LB_NAME\") | .id" | while read lb;
       do
         curl_scw -X DELETE "https://api-world.scaleway.com/lbaas/v1beta1/lbs/$lb" -d "{\"release_ip\": false}"

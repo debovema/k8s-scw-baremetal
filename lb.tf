@@ -1,9 +1,15 @@
 locals {
   nodes_ips = "${concat(scaleway_server.k8s_master.*.public_ip, scaleway_server.k8s_node.*.public_ip)}"
-  masters_private_ips = "${scaleway_server.k8s_master.*.private_ip}"
+  masters_private_ips = "${concat(scaleway_server.k8s_master.*.private_ip, scaleway_server.k8s_additional_master.*.private_ip)}"
   lb_ip = "${data.external.scaleway_lb.result["scaleway_lb_ip"]}"
 }
+
 resource "null_resource" "scaleway_lb" {
+  triggers {
+    masters_ips = "${join(":", local.masters_private_ips)}"
+  }
+  depends_on = ["null_resource.k8s_master_init"]
+
   provisioner "local-exec" {
     command    = "${path.module}/scripts/scaleway-lb.sh"
 
@@ -43,6 +49,9 @@ data "template_file" "traefik" {
 }
 
 resource "null_resource" "traefik_init" {
+  triggers {
+    masters_ips = "${join(":", local.masters_private_ips)}"
+  }
   depends_on = ["null_resource.k8s_master_init"]
 
   connection {
@@ -60,7 +69,7 @@ resource "null_resource" "traefik_init" {
     inline = [
       "set -e",
       "kubectl apply -f /tmp/traefik.yaml",
-      "sed -i '/.*${var.domain_name}/d' /etc/hosts",
+#      "sed -i '/.*${var.domain_name}/d' /etc/hosts",
     ]
   }
 }
